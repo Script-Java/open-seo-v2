@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => {
   const allowedHosts = [
     env.ALLOWED_HOST,
     env.BETTER_AUTH_URL ? new URL(env.BETTER_AUTH_URL).hostname : undefined,
+    // Railway injects the service's generated public hostname at runtime and
+    // probes healthcheckPath with Host: healthcheck.railway.app, so a Railway
+    // deploy passes vite preview's host check without ALLOWED_HOST.
+    env.RAILWAY_PUBLIC_DOMAIN,
+    env.RAILWAY_ENVIRONMENT ? "healthcheck.railway.app" : undefined,
   ].filter((host): host is string => Boolean(host));
   const emitSourcemaps = env.POSTHOG_SOURCEMAPS === "true";
 
