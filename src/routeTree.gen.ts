@@ -37,6 +37,7 @@ import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedOnboardingChatRouteImport } from './routes/_authenticated.onboarding.chat'
 import { Route as AppSettingsOrganizationRouteImport } from './routes/_app/settings/organization'
+import { Route as AppSettingsIntegrationsRouteImport } from './routes/_app/settings/integrations'
 import { Route as AppHelpOpenrouterApiKeyRouteImport } from './routes/_app/help/openrouter-api-key'
 import { Route as AppHelpDataforseoApiKeyRouteImport } from './routes/_app/help/dataforseo-api-key'
 import { Route as ProjectPProjectIdRouteRouteImport } from './routes/_project/p/$projectId/route'
@@ -202,6 +203,11 @@ const AppSettingsOrganizationRoute = AppSettingsOrganizationRouteImport.update({
   path: '/organization',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppSettingsIntegrationsRoute = AppSettingsIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
 const AppHelpOpenrouterApiKeyRoute = AppHelpOpenrouterApiKeyRouteImport.update({
   id: '/help/openrouter-api-key',
   path: '/help/openrouter-api-key',
@@ -359,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/p/$projectId': typeof ProjectPProjectIdRouteRouteWithChildren
   '/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
   '/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
+  '/settings/integrations': typeof AppSettingsIntegrationsRoute
   '/settings/organization': typeof AppSettingsOrganizationRoute
   '/onboarding/chat': typeof AuthenticatedOnboardingChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -407,6 +414,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
   '/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
+  '/settings/integrations': typeof AppSettingsIntegrationsRoute
   '/settings/organization': typeof AppSettingsOrganizationRoute
   '/onboarding/chat': typeof AuthenticatedOnboardingChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -459,6 +467,7 @@ export interface FileRoutesById {
   '/_project/p/$projectId': typeof ProjectPProjectIdRouteRouteWithChildren
   '/_app/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
   '/_app/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
+  '/_app/settings/integrations': typeof AppSettingsIntegrationsRoute
   '/_app/settings/organization': typeof AppSettingsOrganizationRoute
   '/_authenticated/onboarding/chat': typeof AuthenticatedOnboardingChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -511,6 +520,7 @@ export interface FileRouteTypes {
     | '/p/$projectId'
     | '/help/dataforseo-api-key'
     | '/help/openrouter-api-key'
+    | '/settings/integrations'
     | '/settings/organization'
     | '/onboarding/chat'
     | '/api/auth/$'
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/help/dataforseo-api-key'
     | '/help/openrouter-api-key'
+    | '/settings/integrations'
     | '/settings/organization'
     | '/onboarding/chat'
     | '/api/auth/$'
@@ -610,6 +621,7 @@ export interface FileRouteTypes {
     | '/_project/p/$projectId'
     | '/_app/help/dataforseo-api-key'
     | '/_app/help/openrouter-api-key'
+    | '/_app/settings/integrations'
     | '/_app/settings/organization'
     | '/_authenticated/onboarding/chat'
     | '/api/auth/$'
@@ -855,6 +867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsOrganizationRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/settings/integrations': {
+      id: '/_app/settings/integrations'
+      path: '/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AppSettingsIntegrationsRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
     '/_app/help/openrouter-api-key': {
       id: '/_app/help/openrouter-api-key'
       path: '/help/openrouter-api-key'
@@ -1027,11 +1046,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppSettingsRouteChildren {
+  AppSettingsIntegrationsRoute: typeof AppSettingsIntegrationsRoute
   AppSettingsOrganizationRoute: typeof AppSettingsOrganizationRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
 }
 
 const AppSettingsRouteChildren: AppSettingsRouteChildren = {
+  AppSettingsIntegrationsRoute: AppSettingsIntegrationsRoute,
   AppSettingsOrganizationRoute: AppSettingsOrganizationRoute,
   AppSettingsIndexRoute: AppSettingsIndexRoute,
 }

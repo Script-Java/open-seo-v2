@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { getIntegrationValueSync } from "@/server/lib/runtime-env";
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { captcha } from "better-auth/plugins";
@@ -315,7 +316,7 @@ export function getHostedBaseUrl() {
 // enabled (it keys the OAuth-token encryption and is needed to build the auth
 // instance that mints/refreshes Search Console tokens).
 function getHostedSecret() {
-  const secret = env.BETTER_AUTH_SECRET?.trim();
+  const secret = getIntegrationValueSync(env, "BETTER_AUTH_SECRET")?.trim();
 
   if (!secret) {
     throw new Error("BETTER_AUTH_SECRET is required");
@@ -344,8 +345,14 @@ function getSocialProviders() {
 }
 
 function getGoogleSocialProviderConfig() {
-  const googleClientId = env.GOOGLE_CLIENT_ID?.trim();
-  const googleClientSecret = env.GOOGLE_CLIENT_SECRET?.trim();
+  const googleClientId = getIntegrationValueSync(
+    env,
+    "GOOGLE_CLIENT_ID",
+  )?.trim();
+  const googleClientSecret = getIntegrationValueSync(
+    env,
+    "GOOGLE_CLIENT_SECRET",
+  )?.trim();
 
   if (!googleClientId) {
     throw new Error("GOOGLE_CLIENT_ID is required in hosted mode");
@@ -400,4 +407,13 @@ export function getAuth() {
   authInstance = createAuth();
 
   return authInstance;
+}
+
+/**
+ * Drop the cached instance so the next getAuth() is built with the current
+ * integration settings (Google OAuth client, BETTER_AUTH_SECRET) after they
+ * change in Settings → Integrations.
+ */
+export function resetAuthInstance() {
+  authInstance = null;
 }

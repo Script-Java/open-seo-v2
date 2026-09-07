@@ -26,7 +26,8 @@ import { buildSamSkillSource } from "@/server/features/sam/samSkills";
 import { buildSamSystemPrompt } from "@/server/features/sam/samSystemPrompt";
 import { buildChatAgentModel } from "@/server/lib/openrouter";
 import {
-  getEnvValueSync,
+  getIntegrationValueSync,
+  primeIntegrationSettings,
   isHostedServerAuthMode,
 } from "@/server/lib/runtime-env";
 import {
@@ -127,13 +128,13 @@ export class SamChatAgent extends Think {
   }
 
   getModel() {
-    const apiKey = getEnvValueSync(this.env, "OPENROUTER_API_KEY");
+    const apiKey = getIntegrationValueSync(this.env, "OPENROUTER_API_KEY");
     if (!apiKey) {
       throw new Error("OPENROUTER_API_KEY is required for the SAM agent");
     }
     return buildChatAgentModel(
       apiKey,
-      getEnvValueSync(this.env, "OPENROUTER_MODEL"),
+      getIntegrationValueSync(this.env, "OPENROUTER_MODEL"),
     );
   }
 
@@ -253,6 +254,9 @@ export class SamChatAgent extends Think {
   async beforeTurn(_ctx: TurnContext): Promise<TurnConfig> {
     this.turnCostUsd = 0;
     this.turnMonthlyRemaining = null;
+    // getModel() is sync, so make sure an OpenRouter key/model saved in
+    // Settings → Integrations is in the cache before this turn reads it.
+    await primeIntegrationSettings();
     return withPgClient(async (): Promise<TurnConfig> => {
       const ctx = await this.loadSamContext();
       if (!ctx) {

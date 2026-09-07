@@ -130,11 +130,18 @@ const MissingSeoSetupModal = React.forwardRef<
           </button>
           <Link
             {...dataforseoHelpLinkOptions}
-            className="btn btn-primary"
+            className="btn btn-ghost"
             onClick={onClose}
           >
             Open setup guide
             <ExternalLink className="size-4" />
+          </Link>
+          <Link
+            to="/settings/integrations"
+            className="btn btn-primary"
+            onClick={onClose}
+          >
+            Add API key
           </Link>
         </div>
       </div>

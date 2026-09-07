@@ -27,6 +27,10 @@ docker compose up -d
 
 Open `http://localhost:<PORT>` (default `3001`). The first start builds the app and may take 1-2 minutes; follow progress with `docker compose logs -f`.
 
+Provider keys (DataForSEO, OpenRouter, Google OAuth) can also be entered in
+the running app under **Settings → Integrations**; values saved there override
+the matching environment variable and persist in the `open_seo_data` volume.
+
 Optional env values:
 
 - `PORT` (defaults to `3001`)

@@ -11,6 +11,10 @@ export const Route = createFileRoute("/_app/settings")({
 function SettingsLayout() {
   const tabs = [
     { to: "/settings" as const, label: "Personal", exact: true },
+    // Self-host operators manage provider keys in-app; hosted provisions them.
+    ...(isHostedClientAuthMode()
+      ? []
+      : [{ to: "/settings/integrations" as const, label: "Integrations" }]),
     // Self-host has no memberships — the organization tab would 404.
     ...(isHostedClientAuthMode()
       ? [{ to: "/settings/organization" as const, label: "Organization" }]

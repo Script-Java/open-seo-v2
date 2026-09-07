@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
 import { SafeExternalLink } from "@/client/components/SafeExternalLink";
 
@@ -17,11 +18,19 @@ export function GoogleOAuthSetupWarning({
           Add your Google client ID and secret to this OpenSEO deployment before
           connecting {integrationName}.
         </p>
-        <SafeExternalLink
-          url={docsUrl}
-          label="Open setup guide"
-          className="inline-flex items-center gap-1 font-medium underline underline-offset-2"
-        />
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link
+            to="/settings/integrations"
+            className="font-medium underline underline-offset-2"
+          >
+            Add credentials in Settings
+          </Link>
+          <SafeExternalLink
+            url={docsUrl}
+            label="Open setup guide"
+            className="inline-flex items-center gap-1 font-medium underline underline-offset-2"
+          />
+        </div>
       </div>
     </div>
   );

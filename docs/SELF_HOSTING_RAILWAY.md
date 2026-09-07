@@ -26,17 +26,24 @@ Keep the domain private, put your own auth proxy in front, or switch to
    database.
 3. Generate a public domain, then set service variables:
 
-   | Variable                         | Value                                     |
-   | -------------------------------- | ----------------------------------------- |
-   | `AUTH_MODE`                      | `local_noauth`                            |
-   | `CLOUDFLARE_INCLUDE_PROCESS_ENV` | `true`                                    |
-   | `VITE_SHOW_DEVTOOLS`             | `false`                                   |
-   | `PORT`                           | `3001`                                    |
+   | Variable                         | Value                                                    |
+   | -------------------------------- | -------------------------------------------------------- |
+   | `AUTH_MODE`                      | `local_noauth`                                           |
+   | `CLOUDFLARE_INCLUDE_PROCESS_ENV` | `true`                                                   |
+   | `VITE_SHOW_DEVTOOLS`             | `false`                                                  |
+   | `PORT`                           | `3001`                                                   |
    | `ALLOWED_HOST`                   | your Railway domain, e.g. `x.up.railway.app` (no scheme) |
-   | `DATAFORSEO_API_KEY`             | see `docs/DATAFORSEO_API_KEY.md`          |
-   | `OPENROUTER_API_KEY`             | optional, enables SAM                     |
+   | `DATAFORSEO_API_KEY`             | see `docs/DATAFORSEO_API_KEY.md`                         |
+   | `OPENROUTER_API_KEY`             | optional, enables SAM                                    |
 
    `ALLOWED_HOST` accepts a single hostname. A custom domain replaces it.
+
+   The provider keys (`DATAFORSEO_API_KEY`, `OPENROUTER_API_KEY`,
+   `OPENROUTER_MODEL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+   `BETTER_AUTH_SECRET`) can instead be entered in the app under
+   **Settings → Integrations** once it is running. Values saved there live in
+   the app's own storage on the volume, take effect immediately, and override
+   the environment variable of the same name.
 
 4. Deploy. The first build takes several minutes (full SSR build inside the
    image). `/api/health` reports per-feature configuration status.

@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { getIntegrationValueSync } from "@/server/lib/runtime-env";
 import { genericOAuth, organization } from "better-auth/plugins";
 import { baseAuthOptions } from "@/lib/auth-options";
 import { orgAccessControl, orgRoles } from "@/lib/org-permissions";
@@ -71,8 +72,11 @@ export function createBaseAuthConfig(options?: {
         config: [
           {
             providerId: GSC_OAUTH_PROVIDER_ID,
-            clientId: env.GOOGLE_CLIENT_ID?.trim() ?? "",
-            clientSecret: env.GOOGLE_CLIENT_SECRET?.trim() ?? "",
+            clientId:
+              getIntegrationValueSync(env, "GOOGLE_CLIENT_ID")?.trim() ?? "",
+            clientSecret:
+              getIntegrationValueSync(env, "GOOGLE_CLIENT_SECRET")?.trim() ??
+              "",
             discoveryUrl:
               "https://accounts.google.com/.well-known/openid-configuration",
             scopes: [...GSC_OAUTH_SCOPES],
@@ -82,8 +86,11 @@ export function createBaseAuthConfig(options?: {
           },
           {
             providerId: GA4_OAUTH_PROVIDER_ID,
-            clientId: env.GOOGLE_CLIENT_ID?.trim() ?? "",
-            clientSecret: env.GOOGLE_CLIENT_SECRET?.trim() ?? "",
+            clientId:
+              getIntegrationValueSync(env, "GOOGLE_CLIENT_ID")?.trim() ?? "",
+            clientSecret:
+              getIntegrationValueSync(env, "GOOGLE_CLIENT_SECRET")?.trim() ??
+              "",
             discoveryUrl:
               "https://accounts.google.com/.well-known/openid-configuration",
             scopes: [...GA4_OAUTH_SCOPES],
