@@ -20,15 +20,20 @@ pnpm run db:migrate:local
 if [ "${POSTHOG_SOURCEMAPS:-}" = "true" ]; then OUT_DIR=dist-sourcemaps; else OUT_DIR=dist; fi
 FP_FILE="$OUT_DIR/.openseo-build-env"
 
-# Everything that changes build output: the envPrefix prefixes from
-# vite.config.ts (keep in sync) plus POSTHOG_SOURCEMAPS.
-FINGERPRINT="$(env | grep -E '^(VITE_|AUTH_MODE|BYPASS_EMAIL_VERIFICATION|POSTHOG_PUBLIC_KEY|POSTHOG_HOST|TURNSTILE_SITE_KEY|POSTHOG_SOURCEMAPS)' | sort | sha256sum | cut -d' ' -f1)"
-# A missing sha256sum would yield an empty, always-matching fingerprint and
-# silently disable rebuilds — fail loudly instead.
+# Everything that changes build output (see scripts/build-env-fingerprint.sh,
+# shared with Dockerfile.railway, which pre-builds at image build time).
+FINGERPRINT="$(sh scripts/build-env-fingerprint.sh)"
 test -n "$FINGERPRINT"
 
 if [ -f "$FP_FILE" ] && [ "$(cat "$FP_FILE")" = "$FINGERPRINT" ]; then
   echo "Reusing existing build (build-relevant env unchanged)."
+  # vite build also writes .wrangler/deploy/config.json, which preview needs.
+  # Dockerfile.railway builds at image build time and keeps a copy beside the
+  # output, because a volume mounted at .wrangler hides the image's copy.
+  if [ ! -f .wrangler/deploy/config.json ] && [ -f "$OUT_DIR/.openseo-wrangler-deploy-config.json" ]; then
+    mkdir -p .wrangler/deploy
+    cp "$OUT_DIR/.openseo-wrangler-deploy-config.json" .wrangler/deploy/config.json
+  fi
 else
   echo "Building client + server (first start, changed build env, or new image)..."
   rm -f "$FP_FILE"

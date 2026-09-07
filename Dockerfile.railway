@@ -1,0 +1,52 @@
+# check=skip=SecretsUsedInArgOrEnv
+# Railway image for OpenSEO. Same runtime as Dockerfile.selfhost (vite preview
+# on workerd, D1/KV/R2/DO state persisted under /app/.wrangler — mount a
+# Railway volume there), but the client + server build runs HERE, at image
+# build time, instead of at container start:
+#   - Railway forwards service variables to the Docker build as build args, so
+#     the envPrefix'd values vite inlines into the client bundle are known.
+#   - The ~4 GiB, multi-minute build stays off the runtime container, and the
+#     container boots fast enough for Railway's healthcheck.
+# docker-entrypoint.sh still fingerprints the build env at start and rebuilds
+# only if it drifted from what this image was built with.
+# Walkthrough: docs/SELF_HOSTING_RAILWAY.md
+FROM node:22
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.30.1 --activate
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+# Build-affecting env — the list in scripts/build-env-fingerprint.sh. Railway
+# passes service variables as build args when they are declared as ARG here.
+# An ARG left unset or empty is dropped before the build so the fingerprint
+# equals that of a runtime where the variable is simply absent.
+ARG AUTH_MODE=local_noauth
+ARG VITE_SHOW_DEVTOOLS=false
+ARG BYPASS_EMAIL_VERIFICATION
+ARG POSTHOG_PUBLIC_KEY
+ARG POSTHOG_HOST
+ARG TURNSTILE_SITE_KEY
+
+# The repo .npmrc raises the V8 heap ceiling (node-options) so the
+# ~7400-module SSR build doesn't OOM under Node's ~2GB default.
+RUN set -e; \
+    for v in AUTH_MODE VITE_SHOW_DEVTOOLS BYPASS_EMAIL_VERIFICATION POSTHOG_PUBLIC_KEY POSTHOG_HOST TURNSTILE_SITE_KEY; do \
+      eval "val=\${$v:-}"; \
+      if [ -z "$val" ]; then unset "$v"; else export "$v=$val"; fi; \
+    done; \
+    pnpm run build; \
+    sh scripts/build-env-fingerprint.sh > dist/.openseo-build-env; \
+    cp .wrangler/deploy/config.json dist/.openseo-wrangler-deploy-config.json
+
+EXPOSE 3001
+
+# Preflight, migrations, fingerprint check (build reused when unchanged), serve.
+CMD ["sh", "docker-entrypoint.sh"]
