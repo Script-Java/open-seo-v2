@@ -9,7 +9,10 @@ import { SamSessionRepository } from "@/server/features/sam/SamSessionRepository
 import { runScheduledRankChecks } from "@/server/features/rank-tracking/services/scheduledRankChecks";
 import { reconcileStaleAudits } from "@/server/features/audit/services/auditReconciler";
 import { getOrCreateOrganizationCustomer } from "@/server/billing/subscription";
-import { getAccessPasswordGateResponse } from "@/server/lib/access-password";
+import {
+  checkAccessPassword,
+  withAccessCookie,
+} from "@/server/lib/access-password";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { getAuthMode, isHostedAuthMode } from "@/lib/auth-mode";
 import {
@@ -138,23 +141,44 @@ function fetch(
   return withPgClient(() => Promise.resolve(handleFetch(request, env, ctx)));
 }
 
-function handleFetch(
+async function handleFetch(
   request: Request,
   env: Env,
   ctx: ExecutionContext,
-): Response | Promise<Response> {
+): Promise<Response> {
   ctx.waitUntil(maybeSendSelfHostHeartbeat());
 
   const authMode = getAuthMode(env.AUTH_MODE);
   const publicRequest = requestWithPublicOrigin(request);
-  const pathname = new URL(publicRequest.url).pathname;
 
   // local_noauth grants the admin identity to every request; on a public URL
   // the optional access password is the only thing standing in front of it.
   if (authMode === "local_noauth") {
-    const denied = getAccessPasswordGateResponse(publicRequest, env);
-    if (denied) return denied;
+    const gate = await checkAccessPassword(publicRequest, env);
+    if (!gate.allowed) return gate.response;
+    if (gate.setCookie) {
+      const response = await routeRequest(
+        request,
+        publicRequest,
+        authMode,
+        env,
+        ctx,
+      );
+      return withAccessCookie(response, gate.setCookie);
+    }
   }
+
+  return routeRequest(request, publicRequest, authMode, env, ctx);
+}
+
+function routeRequest(
+  request: Request,
+  publicRequest: Request,
+  authMode: ReturnType<typeof getAuthMode>,
+  env: Env,
+  ctx: ExecutionContext,
+): Response | Promise<Response> {
+  const pathname = new URL(publicRequest.url).pathname;
 
   if (pathname === GDPR_STORAGE_ERASURE_PATH) {
     return handleGdprStorageErasure(publicRequest, env);
