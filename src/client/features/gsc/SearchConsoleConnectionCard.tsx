@@ -85,9 +85,13 @@ export function SearchConsoleConnectionCard({
   const setSiteMutation = useMutation({
     mutationFn: (selected: GscSiteSelection) =>
       setGscSite({ data: { projectId, ...selected } }),
-    onSuccess: () => {
+    onSuccess: (_result, selected) => {
       captureClientEvent("gsc:property_select");
-      toast.success("Search Console connected");
+      toast.success(
+        autoConnected.current
+          ? `Search Console connected: ${selected.siteUrl} matches this project's domain`
+          : "Search Console connected",
+      );
       setPicking(false);
       void queryClient.invalidateQueries({ queryKey: connectionKey });
       void queryClient.invalidateQueries({ queryKey: GRANT_STATUS_KEY });
@@ -136,6 +140,27 @@ export function SearchConsoleConnectionCard({
     },
     onError: (error) => toast.error(getStandardErrorMessage(error)),
   });
+
+  // Once the Google account is authorized, connect the property that matches
+  // the project's domain without a manual pick. One attempt per mount; the
+  // connected state keeps "Change property" for corrections.
+  const autoConnected = React.useRef(false);
+  const suggested = sitesQuery.data?.suggested ?? null;
+  React.useEffect(() => {
+    if (
+      connected ||
+      picking ||
+      !showPicker ||
+      !suggested ||
+      autoConnected.current ||
+      setSiteMutation.isPending
+    ) {
+      return;
+    }
+    autoConnected.current = true;
+    setSelection(suggested);
+    setSiteMutation.mutate(suggested);
+  }, [connected, picking, showPicker, suggested, setSiteMutation]);
 
   const handleConnect = () => void startGoogleLink("gsc", window.location.href);
 

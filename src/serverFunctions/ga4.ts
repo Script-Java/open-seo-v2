@@ -30,6 +30,14 @@ const startSelfHostedLinkSchema = z.object({
   callbackURL: z.string().min(1),
 });
 
+// Account-level grant check (no project needed), used by the Settings →
+// Integrations connection test. Mirrors getGscGrantStatus.
+export const getGa4GrantStatus = createServerFn({ method: "GET" })
+  .middleware(requireAuthenticatedContext)
+  .handler(async ({ context }) => {
+    return { connected: await Ga4Service.userHasGrant(context.userId) };
+  });
+
 export const getGa4Connection = createServerFn({ method: "POST" })
   .middleware(requireProjectContext)
   .validator(projectScopedSchema)
@@ -147,6 +155,14 @@ export const listGa4Properties = createServerFn({ method: "POST" })
       Ga4Service.getConnection(context.projectId),
     ]);
     return {
+      // See listGscSites: lets the card connect the matching property itself.
+      suggested: connection
+        ? null
+        : await Ga4Service.suggestPropertyForDomain(
+            context.userId,
+            context.project.domain,
+            propertyList,
+          ),
       accounts: propertyList.accounts.map((grant) => ({
         ...grant,
         properties: grant.properties.map((property) => ({

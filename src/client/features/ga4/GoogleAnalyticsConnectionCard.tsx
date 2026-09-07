@@ -89,7 +89,11 @@ export function GoogleAnalyticsConnectionCard({
       setGa4Property({ data: { projectId, ...selected } }),
     onSuccess: () => {
       captureClientEvent("ga4:property_select");
-      toast.success("Google Analytics connected");
+      toast.success(
+        autoConnected.current
+          ? "Google Analytics connected: property matches this project's domain"
+          : "Google Analytics connected",
+      );
       setPicking(false);
       invalidateConnectionState();
     },
@@ -105,6 +109,26 @@ export function GoogleAnalyticsConnectionCard({
     },
     onError: (error) => toast.error(getStandardErrorMessage(error)),
   });
+  // See SearchConsoleConnectionCard: connect the domain-matched property
+  // without a manual pick, once per mount.
+  const autoConnected = React.useRef(false);
+  const suggested = propertiesQuery.data?.suggested ?? null;
+  React.useEffect(() => {
+    if (
+      connected ||
+      picking ||
+      !showPicker ||
+      !suggested ||
+      autoConnected.current ||
+      setPropertyMutation.isPending
+    ) {
+      return;
+    }
+    autoConnected.current = true;
+    setSelection(suggested);
+    setPropertyMutation.mutate(suggested);
+  }, [connected, picking, showPicker, suggested, setPropertyMutation]);
+
   const handleConnect = () => void startGoogleLink("ga4", window.location.href);
 
   return (

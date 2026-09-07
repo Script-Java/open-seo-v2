@@ -5,6 +5,11 @@ impressions, positions, and URL inspection data, straight from Google.
 
 It's **optional**: OpenSEO runs fine without it, just without Search Console data.
 
+> Self-hosting? **Settings → Integrations** in the app walks through these
+> steps with direct links, copy buttons for the redirect URIs, an automatically
+> generated encryption secret, and a connection test. Projects then connect the
+> property matching their domain automatically.
+
 ## What you'll need
 
 - A Google account with access to your verified Search Console property.

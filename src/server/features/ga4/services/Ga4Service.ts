@@ -6,6 +6,11 @@ import { createGa4AdminClient } from "@/server/lib/ga4Client";
 import { Ga4AdminApiError, Ga4TokenError } from "@/server/lib/ga4Errors";
 import { GA4_OAUTH_PROVIDER_ID } from "@/shared/ga4";
 import {
+  type Ga4Suggestion,
+  matchGa4PropertiesByName,
+  normalizeHost,
+} from "@/server/features/google/propertyMatch";
+import {
   Ga4ConnectionRepository,
   type Ga4Connection,
 } from "@/server/features/ga4/repositories/Ga4ConnectionRepository";
@@ -81,6 +86,72 @@ async function listPropertiesForUserWithGrantStatus(userId: string) {
     }),
   );
   return { accounts };
+}
+
+type Ga4PropertyList = Awaited<
+  ReturnType<typeof listPropertiesForUserWithGrantStatus>
+>;
+
+// Bounds the per-property data-stream lookups below; beyond this an agency
+// account is better served by the picker than by a slow guess.
+const MAX_STREAM_LOOKUPS = 40;
+
+/**
+ * The property that belongs to a project's domain, if it can be told apart:
+ * a single property named after the domain, else the property whose web data
+ * stream URL is the domain. null when nothing matches or several do; the
+ * picker then shows all of them.
+ */
+async function suggestPropertyForDomain(
+  userId: string,
+  domain: string | null,
+  propertyList: Ga4PropertyList,
+): Promise<Ga4Suggestion | null> {
+  const target = normalizeHost(domain);
+  if (!target) return null;
+
+  const byName = matchGa4PropertiesByName(target, propertyList.accounts);
+  if (byName.length === 1) return byName[0];
+
+  const candidates = propertyList.accounts
+    .filter((grant) => !grant.requiresReconnect && !grant.propertiesUnavailable)
+    .flatMap((grant) =>
+      grant.properties.map((property) => ({
+        accountId: grant.accountId,
+        propertyId: property.propertyId,
+      })),
+    );
+  if (candidates.length === 0 || candidates.length > MAX_STREAM_LOOKUPS) {
+    return null;
+  }
+
+  const clients = new Map<string, ReturnType<typeof createGa4AdminClient>>();
+  const matches = await Promise.all(
+    candidates.map(async (candidate) => {
+      let client = clients.get(candidate.accountId);
+      if (!client) {
+        client = createGa4AdminClient({
+          userId,
+          ga4AccountId: candidate.accountId,
+        });
+        clients.set(candidate.accountId, client);
+      }
+      try {
+        const streams = await client.listDataStreams(candidate.propertyId);
+        return streams.some(
+          (stream) =>
+            normalizeHost(stream.webStreamData?.defaultUri) === target,
+        )
+          ? candidate
+          : null;
+      } catch {
+        // A property we can't inspect is simply not suggested.
+        return null;
+      }
+    }),
+  );
+  const matched = matches.filter((match) => match !== null);
+  return matched.length === 1 ? matched[0] : null;
 }
 
 async function setProperty(input: {
@@ -174,6 +245,7 @@ export const Ga4Service = {
   getConnection,
   userHasGrant,
   listPropertiesForUserWithGrantStatus,
+  suggestPropertyForDomain,
   setProperty,
   disconnect,
 };

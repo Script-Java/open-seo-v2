@@ -120,11 +120,33 @@ export const updateIntegrationSettings = createServerFn({ method: "POST" })
       );
     }
 
+    // Saving a Google client is the moment Search Console becomes possible,
+    // and it needs an encryption secret for the stored tokens. Mint one
+    // rather than making the operator learn what BETTER_AUTH_SECRET is.
+    if (
+      (data.GOOGLE_CLIENT_ID || data.GOOGLE_CLIENT_SECRET) &&
+      !data.BETTER_AUTH_SECRET &&
+      !(await loadIntegrationSettings(env.KV)).BETTER_AUTH_SECRET &&
+      !getEnvValueSync(env, "BETTER_AUTH_SECRET")
+    ) {
+      data.BETTER_AUTH_SECRET = generateEncryptionSecret();
+    }
+
     await saveIntegrationSettings(env.KV, data);
     // Better Auth bakes the Google client + secret in at construction.
     resetAuthInstance();
     return getStatus();
   });
+
+function generateEncryptionSecret(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(36));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
+}
 
 type DataForSeoVerification =
   | { ok: true; login: string | null; balance: number | null }

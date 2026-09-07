@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { waitUntil } from "cloudflare:workers";
 import { z } from "zod";
 import { GscService } from "@/server/features/gsc/services/GscService";
+import { suggestGscSite } from "@/server/features/google/propertyMatch";
 import { hasSelfHostedGoogleOAuthConfig } from "@/server/features/google/oauth-config";
 import {
   createSelfHostedGoogleAuthorizationUrl,
@@ -66,6 +67,11 @@ export const listGscSites = createServerFn({ method: "POST" })
     ]);
     let legacySelectionMatched = false;
     return {
+      // The property matching the project's domain, so the card can connect
+      // it without a manual pick. Only meaningful while nothing is connected.
+      suggested: connection
+        ? null
+        : suggestGscSite(context.project.domain, siteList.accounts),
       accounts: siteList.accounts.map((grant) => ({
         accountId: grant.accountId,
         email: grant.email,
