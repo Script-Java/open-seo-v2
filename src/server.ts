@@ -9,6 +9,7 @@ import { SamSessionRepository } from "@/server/features/sam/SamSessionRepository
 import { runScheduledRankChecks } from "@/server/features/rank-tracking/services/scheduledRankChecks";
 import { reconcileStaleAudits } from "@/server/features/audit/services/auditReconciler";
 import { getOrCreateOrganizationCustomer } from "@/server/billing/subscription";
+import { getAccessPasswordGateResponse } from "@/server/lib/access-password";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { getAuthMode, isHostedAuthMode } from "@/lib/auth-mode";
 import {
@@ -147,6 +148,13 @@ function handleFetch(
   const authMode = getAuthMode(env.AUTH_MODE);
   const publicRequest = requestWithPublicOrigin(request);
   const pathname = new URL(publicRequest.url).pathname;
+
+  // local_noauth grants the admin identity to every request; on a public URL
+  // the optional access password is the only thing standing in front of it.
+  if (authMode === "local_noauth") {
+    const denied = getAccessPasswordGateResponse(publicRequest, env);
+    if (denied) return denied;
+  }
 
   if (pathname === GDPR_STORAGE_ERASURE_PATH) {
     return handleGdprStorageErasure(publicRequest, env);

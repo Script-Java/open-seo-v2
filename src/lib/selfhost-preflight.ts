@@ -244,6 +244,26 @@ export function runSelfhostPreflight(env: EnvRecord): PreflightResult {
         },
   );
 
+  if ((get(env, "AUTH_MODE") ?? "cloudflare_access") === "local_noauth") {
+    items.push(
+      get(env, "OPENSEO_ACCESS_PASSWORD")
+        ? {
+            key: "runtime",
+            name: "OPENSEO_ACCESS_PASSWORD",
+            level: "ok",
+            message:
+              "Set — browsers get a login prompt and /mcp requires it as a bearer token.",
+          }
+        : {
+            key: "runtime",
+            name: "OPENSEO_ACCESS_PASSWORD",
+            level: "warn",
+            message:
+              "Not set — anyone who can reach this URL has full admin access and can call /mcp. Set it if the deployment is reachable from the internet.",
+          },
+    );
+  }
+
   items.push({
     key: "runtime",
     name: "Scheduled checks",

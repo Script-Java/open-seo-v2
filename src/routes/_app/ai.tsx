@@ -104,7 +104,16 @@ function AiPage() {
               </Link>{" "}
               instead of the OAuth login.
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-2 text-xs text-base-content/55">
+              If this deployment sets <code>OPENSEO_ACCESS_PASSWORD</code>,
+              headless clients must send it as{" "}
+              <code>Authorization: Bearer &lt;password&gt;</code> (or{" "}
+              <code>x-api-key</code>). Every tool takes a <code>projectId</code>
+              ; call <code>list_projects</code> to map each client site to its
+              id.
+            </p>
+          )}
         </section>
 
         <section className="mt-10">

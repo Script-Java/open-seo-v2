@@ -26,15 +26,16 @@ Keep the domain private, put your own auth proxy in front, or switch to
    database.
 3. Generate a public domain, then set service variables:
 
-   | Variable                         | Value                                                    |
-   | -------------------------------- | -------------------------------------------------------- |
-   | `AUTH_MODE`                      | `local_noauth`                                           |
-   | `CLOUDFLARE_INCLUDE_PROCESS_ENV` | `true`                                                   |
-   | `VITE_SHOW_DEVTOOLS`             | `false`                                                  |
-   | `PORT`                           | `3001`                                                   |
-   | `ALLOWED_HOST`                   | your Railway domain, e.g. `x.up.railway.app` (no scheme) |
-   | `DATAFORSEO_API_KEY`             | see `docs/DATAFORSEO_API_KEY.md`                         |
-   | `OPENROUTER_API_KEY`             | optional, enables SAM                                    |
+   | Variable                         | Value                                                                        |
+   | -------------------------------- | ---------------------------------------------------------------------------- |
+   | `AUTH_MODE`                      | `local_noauth`                                                               |
+   | `CLOUDFLARE_INCLUDE_PROCESS_ENV` | `true`                                                                       |
+   | `VITE_SHOW_DEVTOOLS`             | `false`                                                                      |
+   | `PORT`                           | `3001`                                                                       |
+   | `ALLOWED_HOST`                   | your Railway domain, e.g. `x.up.railway.app` (no scheme)                     |
+   | `OPENSEO_ACCESS_PASSWORD`        | strongly recommended: gates the UI (browser login) and `/mcp` (bearer token) |
+   | `DATAFORSEO_API_KEY`             | see `docs/DATAFORSEO_API_KEY.md`                                             |
+   | `OPENROUTER_API_KEY`             | optional, enables SAM                                                        |
 
    `ALLOWED_HOST` accepts a single hostname. A custom domain replaces it.
 
