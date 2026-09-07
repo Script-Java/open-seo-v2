@@ -38,11 +38,14 @@ export function FieldStatus({
   status,
   onClear,
   isSaving,
+  secret = true,
 }: {
   label: string;
   status: IntegrationSettingStatus;
   onClear: () => Promise<unknown>;
   isSaving: boolean;
+  // Secrets preview as a "…abcd" suffix; non-secrets show the full value.
+  secret?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -55,7 +58,8 @@ export function FieldStatus({
               className="font-mono text-xs text-base-content/60"
               data-ph-mask
             >
-              …{status.preview}
+              {secret ? "…" : ""}
+              {status.preview}
             </span>
           ) : null}
           <button

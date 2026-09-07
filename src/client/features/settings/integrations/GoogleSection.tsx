@@ -108,6 +108,7 @@ export function GoogleSection({
 
       <FieldStatus
         label="Client ID"
+        secret={false}
         status={settings.GOOGLE_CLIENT_ID}
         onClear={() => onSave({ GOOGLE_CLIENT_ID: null })}
         isSaving={isSaving}

@@ -58,6 +58,7 @@ export function OpenRouterSection({
       />
       <FieldStatus
         label="Model"
+        secret={false}
         status={modelStatus}
         onClear={() => onSave({ OPENROUTER_MODEL: null })}
         isSaving={isSaving}
