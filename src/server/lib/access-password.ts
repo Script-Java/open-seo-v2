@@ -19,7 +19,7 @@ const COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 const OPEN_PATHS = new Set(["/api/health"]);
 
-export type AccessGate =
+type AccessGate =
   | { allowed: true; setCookie: string | null }
   | { allowed: false; response: Response };
 
