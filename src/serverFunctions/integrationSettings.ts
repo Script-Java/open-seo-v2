@@ -2,6 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { resetAuthInstance } from "@/lib/auth";
+import { Ga4ConnectionRepository } from "@/server/features/ga4/repositories/Ga4ConnectionRepository";
+import { GscConnectionRepository } from "@/server/features/gsc/repositories/GscConnectionRepository";
+import { ProjectRepository } from "@/server/features/projects/repositories/ProjectRepository";
 import { fetchUserData } from "@/server/lib/dataforseo/appendix";
 import { asAppError, AppError } from "@/server/lib/errors";
 import {
@@ -160,4 +163,48 @@ export const verifyDataForSeoKey = createServerFn({ method: "POST" })
         message: "Could not reach DataForSEO. Try again in a moment.",
       };
     }
+  });
+
+type ProjectGoogleConnection = {
+  projectId: string;
+  name: string;
+  domain: string | null;
+  searchConsole: { property: string; accountEmail: string | null } | null;
+  analytics: { property: string; accountEmail: string | null } | null;
+};
+
+// The shared OAuth client serves every project; which Google account and
+// property each project uses is chosen per project. This overview shows that
+// mapping beside the shared client so the two are not mistaken for one another.
+export const getProjectGoogleConnections = createServerFn({ method: "GET" })
+  .middleware(requireAuthenticatedContext)
+  .handler(async ({ context }): Promise<ProjectGoogleConnection[]> => {
+    const [projects, gsc, ga4] = await Promise.all([
+      ProjectRepository.listProjects(context.organizationId),
+      GscConnectionRepository.listByOrganizationId(context.organizationId),
+      Ga4ConnectionRepository.listByOrganizationId(context.organizationId),
+    ]);
+    const gscByProject = new Map(gsc.map((row) => [row.projectId, row]));
+    const ga4ByProject = new Map(ga4.map((row) => [row.projectId, row]));
+    return projects.map((project) => {
+      const gscRow = gscByProject.get(project.id);
+      const ga4Row = ga4ByProject.get(project.id);
+      return {
+        projectId: project.id,
+        name: project.name,
+        domain: project.domain,
+        searchConsole: gscRow
+          ? {
+              property: gscRow.siteUrl,
+              accountEmail: gscRow.connectedAccountEmail,
+            }
+          : null,
+        analytics: ga4Row
+          ? {
+              property: ga4Row.propertyDisplayName,
+              accountEmail: ga4Row.connectedAccountEmail,
+            }
+          : null,
+      };
+    });
   });

@@ -76,9 +76,19 @@ async function existsForConnectorAccount(
   return rows.length > 0;
 }
 
+async function listByOrganizationId(
+  organizationId: string,
+): Promise<Ga4Connection[]> {
+  return db
+    .select()
+    .from(ga4Connections)
+    .where(eq(ga4Connections.organizationId, organizationId));
+}
+
 export const Ga4ConnectionRepository = {
   getByProjectId,
   upsert,
   deleteByProjectId,
   existsForConnectorAccount,
+  listByOrganizationId,
 };

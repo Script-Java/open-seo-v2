@@ -67,9 +67,19 @@ async function existsForConnectorAccount(
   return rows.length > 0;
 }
 
+async function listByOrganizationId(
+  organizationId: string,
+): Promise<GscConnection[]> {
+  return db
+    .select()
+    .from(gscConnections)
+    .where(eq(gscConnections.organizationId, organizationId));
+}
+
 export const GscConnectionRepository = {
   getByProjectId,
   upsert,
   deleteByProjectId,
   existsForConnectorAccount,
+  listByOrganizationId,
 };

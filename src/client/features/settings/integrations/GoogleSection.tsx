@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { CopyButton } from "@/client/features/ai-mcp/SetupControls";
+import { ProjectGoogleConnections } from "@/client/features/settings/integrations/ProjectGoogleConnections";
 import {
   FieldStatus,
   type Patch,
@@ -66,8 +67,8 @@ export function GoogleSection({
 
   return (
     <Section
-      title="Google Search Console & Analytics"
-      description="An OAuth client from Google Cloud lets you connect Search Console and GA4 properties per project."
+      title="Google OAuth client (shared by all projects)"
+      description="One OAuth client from Google Cloud is used for every project. It only identifies this app to Google; which Google account and which Search Console or Analytics property a project uses is chosen per project, and you can connect as many Google accounts as you need."
       docs={
         <>
           <a
@@ -90,6 +91,8 @@ export function GoogleSection({
         </>
       }
     >
+      <ProjectGoogleConnections />
+
       <div className="space-y-1 text-sm">
         <p className="text-base-content/60">
           Add these as authorized redirect URIs on the Google OAuth client:
