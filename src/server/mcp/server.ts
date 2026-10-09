@@ -107,6 +107,7 @@ import {
   deleteSiteAuditTool,
   listSiteAuditsTool,
 } from "@/server/mcp/tools/site-audit-cleanup-tools";
+import { getLighthouseResultsTool } from "@/server/mcp/tools/lighthouse-tools";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 import { explorePromptTool } from "@/server/mcp/tools/explore-prompt";
 
@@ -268,6 +269,7 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(getAuditStatusTool);
   register(getAuditIssuesTool);
   register(getAuditPagesTool);
+  register(getLighthouseResultsTool);
   register(saveReportTool);
   register(listReportsTool);
   register(getReportTool);
