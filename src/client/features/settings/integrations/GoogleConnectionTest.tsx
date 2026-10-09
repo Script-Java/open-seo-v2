@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Circle } from "lucide-react";
+import { Button } from "@/client/components/ui/button";
 import { GoogleGlyph } from "@/client/features/gsc/GoogleGlyph";
 import { GoogleLinkErrorAlert } from "@/client/features/integrations/GoogleLinkErrorAlert";
 import { startGoogleLink } from "@/client/features/integrations/startGoogleLink";
@@ -36,16 +37,16 @@ export function GoogleConnectionTest({ enabled }: { enabled: boolean }) {
         return (
           <div
             key={provider}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-base-300 px-3 py-2"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
           >
             <div className="flex items-center gap-2 text-sm">
               {authorized ? (
                 <CheckCircle2 className="size-4 text-success" />
               ) : (
-                <Circle className="size-4 text-base-content/30" />
+                <Circle className="size-4 text-muted-foreground/50" />
               )}
               <span>{label}</span>
-              <span className="text-xs text-base-content/50">
+              <span className="text-xs text-muted-foreground">
                 {!enabled
                   ? "Save the client first"
                   : authorized
@@ -53,9 +54,10 @@ export function GoogleConnectionTest({ enabled }: { enabled: boolean }) {
                     : "Not authorized yet"}
               </span>
             </div>
-            <button
+            <Button
               type="button"
-              className="btn btn-sm"
+              size="sm"
+              variant="outline"
               disabled={!enabled}
               onClick={() =>
                 void startGoogleLink(provider, window.location.href)
@@ -65,7 +67,7 @@ export function GoogleConnectionTest({ enabled }: { enabled: boolean }) {
               {authorized
                 ? "Authorize another account"
                 : "Authorize with Google"}
-            </button>
+            </Button>
           </div>
         );
       })}

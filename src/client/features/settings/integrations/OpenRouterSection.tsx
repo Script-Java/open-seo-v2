@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { Button } from "@/client/components/ui/button";
 import {
   FieldStatus,
+  LINK_CLASS,
   type Patch,
   type SaveSettings,
   Section,
@@ -38,7 +40,7 @@ export function OpenRouterSection({
       title="OpenRouter (AI features)"
       description="Enables SAM, the in-app SEO agent, and the onboarding chat."
       docs={
-        <Link className="link link-primary" to="/help/openrouter-api-key">
+        <Link className={LINK_CLASS} to="/help/openrouter-api-key">
           Setup guide
         </Link>
       }
@@ -71,22 +73,28 @@ export function OpenRouterSection({
         placeholder={modelStatus.preview ?? "openai/gpt-5.6-luna"}
       />
       <div className="flex flex-wrap items-center gap-3">
-        <button
+        <Button
           type="button"
-          className="btn btn-primary btn-sm"
+          size="sm"
           disabled={!dirty || isSaving}
           onClick={() => void handleSave()}
         >
           Save
-        </button>
-        <a
-          className="btn btn-ghost btn-sm"
-          href="https://openrouter.ai/settings/keys"
-          target="_blank"
-          rel="noreferrer"
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          nativeButton={false}
+          render={
+            <a
+              href="https://openrouter.ai/settings/keys"
+              target="_blank"
+              rel="noreferrer"
+            />
+          }
         >
           Open OpenRouter keys
-        </a>
+        </Button>
       </div>
     </Section>
   );

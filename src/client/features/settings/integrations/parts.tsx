@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { Badge } from "@/client/components/ui/badge";
+import { Button } from "@/client/components/ui/button";
+import { Input } from "@/client/components/ui/input";
 import type { IntegrationSettingKey } from "@/server/lib/integration-settings";
 import type {
   IntegrationSettingsStatus,
@@ -9,6 +12,9 @@ import type {
 
 export type Patch = Partial<Record<IntegrationSettingKey, string | null>>;
 export type SaveSettings = (patch: Patch) => Promise<IntegrationSettingsStatus>;
+
+export const LINK_CLASS =
+  "font-medium text-primary underline underline-offset-2 hover:no-underline";
 
 export function Section({
   title,
@@ -23,10 +29,10 @@ export function Section({
 }) {
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-sm font-medium text-base-content/50">{title}</h2>
-        <p className="mt-1 text-sm text-base-content/60">{description}</p>
-        <p className="mt-1 text-sm">{docs}</p>
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-sm">{docs}</p>
       </div>
       {children}
     </section>
@@ -52,19 +58,21 @@ export function FieldStatus({
       <span>{label}</span>
       {status.source === "app" ? (
         <>
-          <span className="badge badge-success badge-sm">Set in app</span>
+          <Badge variant="success">Set in app</Badge>
           {status.preview ? (
             <span
-              className="font-mono text-xs text-base-content/60"
+              className="font-mono text-xs text-muted-foreground"
               data-ph-mask
             >
               {secret ? "…" : ""}
               {status.preview}
             </span>
           ) : null}
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost btn-xs text-error"
+            variant="ghost"
+            size="xs"
+            className="text-destructive"
             disabled={isSaving}
             onClick={() => {
               if (
@@ -77,14 +85,12 @@ export function FieldStatus({
             }}
           >
             Clear
-          </button>
+          </Button>
         </>
       ) : status.source === "env" ? (
-        <span className="badge badge-info badge-sm">
-          Set by environment variable
-        </span>
+        <Badge variant="info">Set by environment variable</Badge>
       ) : (
-        <span className="badge badge-ghost badge-sm">Not set</span>
+        <Badge variant="outline">Not set</Badge>
       )}
     </div>
   );
@@ -111,11 +117,11 @@ export function TextInput({
 }) {
   return (
     <label className="block space-y-1">
-      <span className="text-xs font-medium text-base-content/70">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
-        <input
+        <Input
           type={secret ? "password" : "text"}
-          className="input input-sm w-full font-mono"
+          className="h-8 font-mono text-sm"
           value={value}
           placeholder={placeholder}
           autoComplete={autoComplete}
@@ -126,7 +132,7 @@ export function TextInput({
         {trailing}
       </div>
       {hint ? (
-        <span className="text-xs text-base-content/50">{hint}</span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
       ) : null}
     </label>
   );

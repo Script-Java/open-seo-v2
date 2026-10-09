@@ -18,9 +18,12 @@ export async function getOptionalEnvValue(
   name: string,
 ): Promise<string | undefined> {
   const env = (await getWorkersEnv()) ?? {};
-  if (isIntegrationSettingKey(name) && integrationSettingsEnabled(env)) {
-    const stored = (await loadIntegrationSettings(getKv(env)))[name];
-    if (stored) return stored;
+  if (integrationSettingsEnabled(env)) {
+    // Every async read refreshes the app-managed settings (one cached KV
+    // get), so the sync readers below see a value saved in Settings →
+    // Integrations by the time a request or agent turn reaches them.
+    const stored = await loadIntegrationSettings(getKv(env));
+    if (isIntegrationSettingKey(name) && stored[name]) return stored[name];
   }
   return getEnvValueSync(env, name);
 }
@@ -28,8 +31,10 @@ export async function getOptionalEnvValue(
 /**
  * Sync variant for callers that already hold an env record (e.g. a Durable
  * Object's `this.env`, needed because Think's `getModel()` hook is sync).
- * Same policy as the async form: process.env first (where local `.env.local`
- * secrets land in dev), skipping empty strings, then the given env.
+ * Same policy as the async form: an integration key saved in Settings →
+ * Integrations (from the cache the last async read filled), then
+ * process.env (where local `.env.local` secrets land in dev), skipping empty
+ * strings, then the given env.
  */
 export function getEnvValueSync(
   // `object` so interface-typed envs (e.g. Cloudflare.Env) are accepted
@@ -37,6 +42,10 @@ export function getEnvValueSync(
   env: object,
   name: string,
 ): string | undefined {
+  if (isIntegrationSettingKey(name) && integrationSettingsEnabled(env)) {
+    const stored = getCachedIntegrationSetting(name);
+    if (stored) return stored;
+  }
   const processValue =
     typeof process !== "undefined" ? process.env?.[name] : undefined;
   if (processValue) {
@@ -47,21 +56,11 @@ export function getEnvValueSync(
 }
 
 /**
- * Sync read of an integration key that also honours app-managed settings —
+ * Alias of getEnvValueSync kept for sync-only spots that name the intent
+ * (Better Auth construction): an integration key honours app-managed settings
  * from the cache the last async read (or `primeIntegrationSettings`) filled.
- * For sync-only spots like Better Auth construction and the SAM agent's
- * model hook; everything else should use getOptionalEnvValue.
  */
-export function getIntegrationValueSync(
-  env: object,
-  name: string,
-): string | undefined {
-  if (isIntegrationSettingKey(name) && integrationSettingsEnabled(env)) {
-    const stored = getCachedIntegrationSetting(name);
-    if (stored) return stored;
-  }
-  return getEnvValueSync(env, name);
-}
+export const getIntegrationValueSync = getEnvValueSync;
 
 /** Warm the app-managed settings cache so getIntegrationValueSync is current. */
 export async function primeIntegrationSettings(): Promise<void> {

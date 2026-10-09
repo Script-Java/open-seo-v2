@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { Skeleton } from "@/client/components/ui/skeleton";
 import { DataForSeoSection } from "@/client/features/settings/integrations/DataForSeoSection";
 import { GoogleSection } from "@/client/features/settings/integrations/GoogleSection";
 import { OpenRouterSection } from "@/client/features/settings/integrations/OpenRouterSection";
@@ -47,7 +48,7 @@ function IntegrationSettingsPage() {
 
   if (isHostedClientAuthMode() || statusQuery.data?.manageable === false) {
     return (
-      <p className="text-sm text-base-content/60">
+      <p className="text-sm text-muted-foreground">
         Integration keys are managed by the hosting provider on this deployment.
       </p>
     );
@@ -55,14 +56,14 @@ function IntegrationSettingsPage() {
 
   if (statusQuery.isError) {
     return (
-      <p className="text-sm text-error">
+      <p className="text-sm text-destructive">
         We couldn't load the integration settings.
       </p>
     );
   }
 
   if (!statusQuery.data) {
-    return <div className="skeleton h-40 w-full" />;
+    return <Skeleton className="h-40 w-full" />;
   }
 
   const { settings } = statusQuery.data;
@@ -70,7 +71,7 @@ function IntegrationSettingsPage() {
 
   return (
     <div className="space-y-10">
-      <p className="text-sm text-base-content/60">
+      <p className="text-sm text-muted-foreground">
         Keys saved here are stored in this deployment's own database and take
         effect immediately. They override the matching environment variable;
         clearing one falls back to the environment.

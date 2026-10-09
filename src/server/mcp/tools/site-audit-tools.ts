@@ -9,6 +9,7 @@ import {
   getIssueDescriptor,
   ISSUE_SEVERITY_ORDER,
 } from "@/shared/audit-issues";
+import { PAGE_FETCH_CLASSES } from "@/shared/audit-fetch-class";
 import { mcpResponse } from "@/server/mcp/formatters";
 import { buildProjectMeta } from "@/server/mcp/context";
 import {
@@ -17,6 +18,8 @@ import {
 } from "@/server/mcp/output-schemas";
 import { withMcpProjectAuth } from "@/server/mcp/project-auth";
 import { projectIdSchema } from "@/server/mcp/schemas";
+import { renderingEstimateText } from "@/shared/audit-rendering";
+import { RENDERED_MAX_AUDIT_PAGES } from "@/shared/audit-limits";
 
 const auditIdSchema = z
   .string()
@@ -54,6 +57,12 @@ const runInputSchema = {
     .max(10_000)
     .optional()
     .describe("Page budget for the crawl (default 50)."),
+  renderJavaScript: z
+    .boolean()
+    .optional()
+    .describe(
+      `Render JavaScript before auditing, for sites whose content or links load client-side or whose bot protection blocks the plain crawler. Slower, and limited to ${RENDERED_MAX_AUDIT_PAGES.toLocaleString("en-US")} pages. On hosted plans: ${renderingEstimateText(100)} Billing counts pages actually rendered. Hosted plans hold the high end until the audit ends; an account that cannot cover it is refused. Default false.`,
+    ),
   runLighthouse: z
     .boolean()
     .optional()
@@ -69,7 +78,7 @@ export const runSiteAuditTool = {
   config: {
     title: "Run site audit",
     description:
-      "Start a site audit: crawls the site (robots.txt-aware, same-origin), checks every page for SEO issues (broken links, duplicate/missing titles and descriptions, redirect chains, orphan pages, canonical problems, thin content, and more), and optionally runs Lighthouse on a sample of pages. Runs in the background — poll get_audit_status, then read get_audit_issues. If the site blocks our crawler, pages are honestly flagged as blocked rather than misreported.",
+      "Start a site audit: crawls the site (robots.txt-aware, same-origin), checks every page for SEO issues (broken links, duplicate/missing titles and descriptions, redirect chains, orphan pages, canonical problems, thin content, and more), and optionally runs Lighthouse on a sample of pages. Runs in the background — poll get_audit_status, then read get_audit_issues. If the site rate limits the crawler it slows down and retries; pages it still cannot read are honestly flagged as blocked or rate-limited rather than misreported.",
     inputSchema: runInputSchema,
     outputSchema: z
       .object({
@@ -81,7 +90,7 @@ export const runSiteAuditTool = {
       .passthrough(),
     annotations: {
       readOnlyHint: false,
-      openWorldHint: false,
+      openWorldHint: true,
       destructiveHint: false,
     },
   },
@@ -101,6 +110,7 @@ export const runSiteAuditTool = {
         maxPages: args.maxPages,
         lighthouseStrategy,
         limitTier,
+        renderJavaScript: args.renderJavaScript,
       }));
     } catch (error) {
       // Expected refusals become readable answers instead of protocol errors:
@@ -110,7 +120,13 @@ export const runSiteAuditTool = {
           ? "Audit capacity reached for this account — delete old audits in the dashboard to free capacity, then try again."
           : error instanceof AppError && error.code === "AUDIT_ALREADY_RUNNING"
             ? "This account is at its limit of concurrently running audits. Poll get_audit_status until one finishes, then try again."
-            : null;
+            : // startAudit refuses only rendering with FORBIDDEN; its message
+              // says why and what to do instead.
+              error instanceof AppError &&
+                error.code === "FORBIDDEN" &&
+                args.renderJavaScript
+              ? error.message
+              : null;
       if (refusalText) {
         return mcpResponse({
           text: refusalText,
@@ -333,10 +349,10 @@ const pagesInputSchema = {
   projectId: projectIdSchema,
   auditId: auditIdSchema,
   fetchClass: z
-    .enum(["ok", "blocked", "error"])
+    .enum(PAGE_FETCH_CLASSES)
     .optional()
     .describe(
-      'Filter by fetch outcome ("blocked" = the site\'s bot protection challenged the crawler).',
+      'Filter by fetch outcome ("blocked" = the site\'s bot protection challenged the crawler; "rate_limited" = a 429 prevented the crawler from reading the page).',
     ),
   statusCode: z
     .number()

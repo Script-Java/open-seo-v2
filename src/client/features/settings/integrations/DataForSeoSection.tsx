@@ -3,8 +3,12 @@ import { Link } from "@tanstack/react-router";
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/client/components/ui/alert";
+import { Button } from "@/client/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/client/components/ui/tabs";
 import {
   FieldStatus,
+  LINK_CLASS,
   type SaveSettings,
   Section,
   TextInput,
@@ -58,7 +62,7 @@ export function DataForSeoSection({
       title="DataForSEO"
       description="Powers keyword research, domain overview, backlinks, rank tracking and site audits."
       docs={
-        <Link className="link link-primary" to="/help/dataforseo-api-key">
+        <Link className={LINK_CLASS} to="/help/dataforseo-api-key">
           Setup guide
         </Link>
       }
@@ -70,24 +74,19 @@ export function DataForSeoSection({
         isSaving={isSaving}
       />
 
-      <div role="tablist" className="tabs tabs-box tabs-sm w-fit">
-        <button
-          type="button"
-          role="tab"
-          className={`tab ${mode === "credentials" ? "tab-active" : ""}`}
-          onClick={() => setMode("credentials")}
-        >
-          Login &amp; API password
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className={`tab ${mode === "key" ? "tab-active" : ""}`}
-          onClick={() => setMode("key")}
-        >
-          Base64 key
-        </button>
-      </div>
+      <Tabs
+        value={mode}
+        onValueChange={(value) =>
+          setMode(value === "key" ? "key" : "credentials")
+        }
+      >
+        <TabsList>
+          <TabsTrigger value="credentials">
+            Login &amp; API password
+          </TabsTrigger>
+          <TabsTrigger value="key">Base64 key</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {mode === "credentials" ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -116,37 +115,44 @@ export function DataForSeoSection({
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
+        <Button
           type="button"
-          className="btn btn-primary btn-sm"
+          size="sm"
           disabled={!encodedKey || isSaving}
           onClick={() => void handleSave()}
         >
           Save
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn btn-sm"
+          size="sm"
+          variant="outline"
           disabled={!status.source || verifyMutation.isPending}
           onClick={() => verifyMutation.mutate()}
         >
           {verifyMutation.isPending ? "Verifying…" : "Verify connection"}
-        </button>
-        <a
-          className="btn btn-ghost btn-sm"
-          href="https://app.dataforseo.com/api-access"
-          target="_blank"
-          rel="noreferrer"
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          nativeButton={false}
+          render={
+            <a
+              href="https://app.dataforseo.com/api-access"
+              target="_blank"
+              rel="noreferrer"
+            />
+          }
         >
           Open DataForSEO
-        </a>
+        </Button>
       </div>
 
       {verifyMutation.data ? (
         verifyMutation.data.ok ? (
-          <div className="alert alert-success text-sm">
-            <CheckCircle2 className="size-4 shrink-0" />
-            <span>
+          <Alert variant="success">
+            <CheckCircle2 className="size-4" />
+            <AlertDescription>
               Connected
               {verifyMutation.data.login
                 ? ` as ${verifyMutation.data.login}`
@@ -154,13 +160,13 @@ export function DataForSeoSection({
               {verifyMutation.data.balance !== null
                 ? ` · balance $${verifyMutation.data.balance.toFixed(2)}`
                 : ""}
-            </span>
-          </div>
+            </AlertDescription>
+          </Alert>
         ) : (
-          <div className="alert alert-warning text-sm">
-            <ShieldAlert className="size-4 shrink-0" />
-            <span>{verifyMutation.data.message}</span>
-          </div>
+          <Alert variant="warning">
+            <ShieldAlert className="size-4" />
+            <AlertDescription>{verifyMutation.data.message}</AlertDescription>
+          </Alert>
         )
       ) : null}
     </Section>

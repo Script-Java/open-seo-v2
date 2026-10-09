@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { ga4Connections } from "@/db/schema";
 
@@ -59,23 +59,6 @@ async function deleteByProjectId(projectId: string): Promise<void> {
     .where(eq(ga4Connections.projectId, projectId));
 }
 
-async function existsForConnectorAccount(
-  userId: string,
-  ga4AccountId: string,
-): Promise<boolean> {
-  const rows = await db
-    .select({ id: ga4Connections.id })
-    .from(ga4Connections)
-    .where(
-      and(
-        eq(ga4Connections.connectedByUserId, userId),
-        eq(ga4Connections.ga4AccountId, ga4AccountId),
-      ),
-    )
-    .limit(1);
-  return rows.length > 0;
-}
-
 async function listByOrganizationId(
   organizationId: string,
 ): Promise<Ga4Connection[]> {
@@ -86,9 +69,8 @@ async function listByOrganizationId(
 }
 
 export const Ga4ConnectionRepository = {
+  listByOrganizationId,
   getByProjectId,
   upsert,
   deleteByProjectId,
-  existsForConnectorAccount,
-  listByOrganizationId,
 };

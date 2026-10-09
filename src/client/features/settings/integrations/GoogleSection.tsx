@@ -1,8 +1,11 @@
 import { type ReactNode, useState } from "react";
-import { CopyButton } from "@/client/features/ai-mcp/SetupControls";
+import { Badge } from "@/client/components/ui/badge";
+import { Button } from "@/client/components/ui/button";
+import { CopyButton } from "@/client/components/CopyButton";
 import { GoogleConnectionTest } from "@/client/features/settings/integrations/GoogleConnectionTest";
 import {
   FieldStatus,
+  LINK_CLASS,
   type Patch,
   type SaveSettings,
   Section,
@@ -76,9 +79,9 @@ export function GoogleSection({
       <div className="flex items-center gap-2 text-sm">
         <span>Google OAuth client</span>
         {configured ? (
-          <span className="badge badge-success badge-sm">Configured</span>
+          <Badge variant="success">Configured</Badge>
         ) : (
-          <span className="badge badge-warning badge-sm">Setup needed</span>
+          <Badge variant="warning">Setup needed</Badge>
         )}
       </div>
 
@@ -101,7 +104,7 @@ export function GoogleSection({
           </div>
         </Step>
         <Step n={3} title="Set up the consent screen">
-          <p className="text-base-content/60">
+          <p className="text-muted-foreground">
             Choose <strong>External</strong> and fill in the app name and
             emails. While the app is in Testing, add every Google account you
             will connect as a <strong>test user</strong>, or Google answers{" "}
@@ -117,18 +120,17 @@ export function GoogleSection({
           </div>
         </Step>
         <Step n={4} title="Create an OAuth client ID (Web application)">
-          <p className="text-base-content/60">
+          <p className="text-muted-foreground">
             Add both redirect URIs exactly as shown:
           </p>
           {redirectUris.map((uri) => (
             <div key={uri} className="flex items-center gap-2">
-              <code className="rounded bg-base-200 px-2 py-1 text-xs">
-                {uri}
-              </code>
+              <code className="rounded bg-muted px-2 py-1 text-xs">{uri}</code>
               <CopyButton
                 value={uri}
+                label="Copy redirect URI"
                 successMessage="Redirect URI copied"
-                iconOnly
+                size="icon-xs"
               />
             </div>
           ))}
@@ -167,21 +169,22 @@ export function GoogleSection({
             secret
           />
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            <Button
               type="button"
-              className="btn btn-primary btn-sm"
+              size="sm"
               disabled={!dirty || isSaving}
               onClick={() => void handleSave()}
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-ghost btn-xs"
+              size="xs"
+              variant="ghost"
               onClick={() => setShowAdvanced((value) => !value)}
             >
               {showAdvanced ? "Hide advanced" : "Advanced"}
-            </button>
+            </Button>
           </div>
           {showAdvanced ? (
             <AdvancedSecret
@@ -212,7 +215,7 @@ function AdvancedSecret({
 }) {
   const [authSecret, setAuthSecret] = useState("");
   return (
-    <div className="space-y-2 rounded-lg border border-base-300 p-3">
+    <div className="space-y-2 rounded-lg border border-border p-3">
       <FieldStatus
         label="Token encryption secret"
         status={settings.BETTER_AUTH_SECRET}
@@ -226,9 +229,10 @@ function AdvancedSecret({
         onChange={setAuthSecret}
         secret
         trailing={
-          <button
+          <Button
             type="button"
-            className="btn btn-sm"
+            size="sm"
+            variant="outline"
             disabled={authSecret.trim().length < 32 || isSaving}
             onClick={() => {
               void onSave({ BETTER_AUTH_SECRET: authSecret.trim() }).then(() =>
@@ -237,7 +241,7 @@ function AdvancedSecret({
             }}
           >
             Save
-          </button>
+          </Button>
         }
       />
     </div>
@@ -255,7 +259,7 @@ function Step({
 }) {
   return (
     <li className="flex gap-3">
-      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-base-200 text-xs font-semibold">
+      <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold">
         {n}
       </span>
       <div className="min-w-0 flex-1 space-y-2">
@@ -274,12 +278,7 @@ function ExternalLink({
   children: ReactNode;
 }) {
   return (
-    <a
-      className="link link-primary"
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-    >
+    <a className={LINK_CLASS} href={href} target="_blank" rel="noreferrer">
       {children}
     </a>
   );

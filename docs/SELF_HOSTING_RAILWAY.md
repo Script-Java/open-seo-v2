@@ -10,7 +10,7 @@ Objects on disk) packaged so Railway can build and run it:
   image build time (Railway forwards service variables as build args), so the
   container boots in seconds instead of rebuilding on every start.
 - `scripts/build-env-fingerprint.sh` — the build-env hash shared by the
-  Dockerfile and `docker-entrypoint.sh`; if runtime env that affects the client
+  Dockerfile and `deploy/docker/docker-entrypoint.sh`; if runtime env that affects the client
   bundle differs from what the image was built with, the entrypoint rebuilds at
   boot (slow but correct).
 
