@@ -10,7 +10,7 @@
 # deploy/docker/docker-entrypoint.sh still fingerprints the build env at start and rebuilds
 # only if it drifted from what this image was built with.
 # Walkthrough: docs/SELF_HOSTING_RAILWAY.md
-FROM node:22
+FROM public.ecr.aws/docker/library/node:22
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
